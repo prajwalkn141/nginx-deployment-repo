@@ -4,10 +4,13 @@ if ! command -v kubectl &> /dev/null; then
     chmod +x kubectl
     export PATH=$PATH:$PWD
 fi
-# Check if deployment exists and scale it down
+# Check if deployment exists and delete it
 if kubectl get deployment nginx-imperative &> /dev/null; then
-    kubectl scale deployment nginx-imperative --replicas=0
-    echo "Scaled down existing nginx-imperative deployment"
+    kubectl delete deployment nginx-imperative
+    echo "Deleted existing nginx-imperative deployment"
+    # Wait for deletion to complete (optional, avoids race condition)
+    sleep 5
 fi
 # Create new deployment with 2 replicas
 kubectl create deployment nginx-imperative --image=nginx --replicas=2
+echo "Created new nginx-imperative deployment with 2 replicas"
