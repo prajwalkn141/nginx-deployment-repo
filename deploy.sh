@@ -8,9 +8,13 @@ fi
 if kubectl get deployment nginx-imperative &> /dev/null; then
     kubectl delete deployment nginx-imperative
     echo "Deleted existing nginx-imperative deployment"
-    # Wait for deletion to complete (optional, avoids race condition)
+    # Wait for deletion to complete
     sleep 5
 fi
 # Create new deployment with 2 replicas
 kubectl create deployment nginx-imperative --image=nginx --replicas=2
 echo "Created new nginx-imperative deployment with 2 replicas"
+# Monitor deployment readiness
+echo "Checking deployment status..."
+kubectl wait --for=condition=available --timeout=60s deployment/nginx-imperative
+echo "Deployment nginx-imperative is ready with 2 replicas"
