@@ -4,7 +4,7 @@ metadata:
   name: nginx-declarative
   namespace: default  # Add this line
 spec:
-  replicas: 2
+  replicas: 3
   selector:
     matchLabels:
       app: nginx
