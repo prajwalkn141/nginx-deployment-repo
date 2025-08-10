@@ -7,23 +7,32 @@ if ! command -v kubectl &> /dev/null; then
     export PATH=$PWD:$PATH
 fi
 kubectl version --client || { echo "kubectl failed to run"; exit 1; }
-
 # Drift Correction: Check and delete existing deployment
-kubectl get deployment microservice-deployment > /dev/null 2>&1 || true
+kubectl get deployment nginx-imperative > /dev/null 2>&1 || true
 if [ $? -eq 0 ]; then
-    kubectl delete deployment microservice-deployment --ignore-not-found
-    echo "Deleted existing microservice-deployment"
+    kubectl delete deployment nginx-imperative --ignore-not-found
+    echo "Deleted existing nginx-imperative deployment"
     sleep 5
 fi
-
 # Create deployment with compliance settings
 echo "Attempting to create deployment..."
-kubectl create deployment microservice-deployment --image=743833337997.dkr.ecr.eu-west-1.amazonaws.com/microservice-app:latest --replicas=2 --dry-run=client -o yaml | \
-sed 's/resources: {}/resources:\n          limits:\n            cpu: "200m"\n            memory: "256Mi"\n          requests:\n            cpu: "100m"\n            memory: "128Mi"/' | \
-sed '/securityContext: {}/a \          runAsNonRoot: true\n          privileged: false' | kubectl apply -f -
-echo "Created new microservice-deployment with 2 replicas and compliance settings"
-
+kubectl create deployment nginx-imperative --image=nginx:1.25-alpine --replicas=2 --dry-run=client -o yaml | \
+sed 's/resources: {}/resources:\n limits:\n cpu: "200m"\n memory: "256Mi"\n requests:\n cpu: "100m"\n memory: "128Mi"/' | \
+sed '/securityContext: {}/a \ runAsNonRoot: true\n privileged: false' | kubectl apply -f -
+echo "Created new nginx-imperative deployment with 2 replicas and compliance settings"
 # Verify deployment status
 echo "Checking deployment status..."
-kubectl wait --for=condition=available --timeout=60s deployment/microservice-deployment || { echo "Wait failed: $?"; exit 1; }
-echo "Deployment microservice-deployment is ready with 2 replicas"
+kubectl wait --for=condition=available --timeout=60s deployment/nginx-imperative || { echo "Wait failed: $?"; exit 1; }
+echo "Deployment nginx-imperative is ready with 2 replicas"
+# Install Trivy if not present (adjusted for Windows compatibility)
+if ! command -v trivy &> /dev/null; then
+    echo "Installing Trivy..."
+    curl -LO https://github.com/aquasecurity/trivy/releases/download/v0.64.1/trivy_0.64.1_Windows-64bit.zip
+    unzip trivy_0.64.1_Windows-64bit.zip -d trivy
+    export PATH=$PATH:D:\Kube\trivy
+fi
+trivy --version || { echo "Trivy installation failed"; exit 1; }
+# Vulnerability Detection: Scan the image
+echo "Scanning nginx:1.25-alpine for vulnerabilities..."
+trivy image --exit-code 1 --severity CRITICAL,HIGH,MEDIUM --format table --output scan_imperative.txt nginx:1.25-alpine || { echo "Trivy scan failed"; exit 1; }
+echo "Vulnerability scan completed. Results in scan_imperative.txt"
