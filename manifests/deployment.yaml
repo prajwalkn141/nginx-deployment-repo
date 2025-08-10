@@ -7,11 +7,11 @@ spec:
   replicas: 2
   selector:
     matchLabels:
-      app: nginx-declarative  # Updated to match template labels
+      app: nginx-declarative  # Consistent with template
   template:
     metadata:
       labels:
-        app: nginx-declarative  # Updated for consistency
+        app: nginx-declarative  # Consistent with selector
     spec:
       containers:
       - name: nginx
@@ -30,16 +30,15 @@ spec:
           runAsNonRoot: true
           runAsUser: 101
           privileged: false
-        livenessProbe:  # Added to detect and restart unhealthy pods
+        livenessProbe:  # Detects and restarts unhealthy pods
           httpGet:
             path: /
             port: http
           initialDelaySeconds: 30
           periodSeconds: 10
-        readinessProbe:  # Added to ensure pods are ready to serve traffic
+        readinessProbe:  # Ensures pods are ready
           httpGet:
             path: /
             port: http
           initialDelaySeconds: 5
           periodSeconds: 10
-      # Optional: Add tolerations or nodeSelector if needed for specific node health
