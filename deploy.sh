@@ -17,13 +17,13 @@ fi
 # Create deployment with compliance settings
 echo "Attempting to create deployment..."
 kubectl create deployment nginx-imperative --image=nginx:1.25-alpine --replicas=2 --dry-run=client -o yaml > temp.yaml
-# Modify YAML in temp file with proper nesting
-sed -i '/template:/a \
-      spec:' temp.yaml
-sed -i '/spec:/a \
-      securityContext:\n\
-        runAsNonRoot: true\n\
-        privileged: false' temp.yaml
+# Modify YAML in temp file with proper nesting in a single pass
+sed -i '/template:/{/metadata/a\
+      spec:\
+        securityContext:\
+          runAsNonRoot: true\
+          privileged: false\
+        containers:' temp.yaml
 sed -i 's/resources: {}/resources:\n          limits:\n            cpu: "200m"\n            memory: "256Mi"\n          requests:\n            cpu: "100m"\n            memory: "128Mi"/' temp.yaml
 # Debug: Display modified YAML
 cat temp.yaml
