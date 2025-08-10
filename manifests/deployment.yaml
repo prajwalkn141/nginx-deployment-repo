@@ -34,11 +34,11 @@ spec:
           httpGet:
             path: /
             port: http
-          initialDelaySeconds: 30
-          periodSeconds: 10
+          initialDelaySeconds: 60
+          periodSeconds: 15
         readinessProbe:  # Ensures pods are ready
           httpGet:
             path: /
             port: http
-          initialDelaySeconds: 5
-          periodSeconds: 10
+          initialDelaySeconds: 20
+          periodSeconds: 15
