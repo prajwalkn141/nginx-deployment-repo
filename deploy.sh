@@ -17,6 +17,7 @@ fi
 # Create deployment with compliance settings
 echo "Attempting to create deployment..."
 kubectl create deployment nginx-imperative --image=nginx:1.25-alpine --replicas=2 --dry-run=client -o yaml | \
+sed '/spec:/a \      securityContext: {}' | \
 sed 's/resources: {}/resources:\n          limits:\n            cpu: "200m"\n            memory: "256Mi"\n          requests:\n            cpu: "100m"\n            memory: "128Mi"/' | \
 sed '/securityContext: {}/a \          runAsNonRoot: true\n          privileged: false' | kubectl apply -f -
 echo "Created new nginx-imperative deployment with 2 replicas and compliance settings"
