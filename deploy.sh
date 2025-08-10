@@ -16,21 +16,11 @@ if [ $? -eq 0 ]; then
 fi
 # Create deployment with compliance settings
 echo "Attempting to create deployment..."
-kubectl create deployment nginx-imperative --image=nginx:1.25-alpine --replicas=2 --dry-run=client -o yaml > temp.yaml
-# Modify YAML in temp file with proper nesting in a single pass
-sed -i '/template:/{/metadata/a\
-      spec:\
-        securityContext:\
-          runAsNonRoot: true\
-          privileged: false\
-        containers:' temp.yaml
-sed -i 's/resources: {}/resources:\n          limits:\n            cpu: "200m"\n            memory: "256Mi"\n          requests:\n            cpu: "100m"\n            memory: "128Mi"/' temp.yaml
-# Debug: Display modified YAML
-cat temp.yaml
-# Apply the modified YAML
-kubectl apply -f temp.yaml || { echo "Deployment apply failed, but continuing for testing. Check temp.yaml for issues."; }
+kubectl create deployment nginx-imperative --image=nginx:1.25-alpine --replicas=2 --dry-run=client -o yaml | \
+sed 's/resources: {}/resources:\n          limits:\n            cpu: "200m"\n            memory: "256Mi"\n          requests:\n            cpu: "100m"\n            memory: "128Mi"/' | \
+sed '/securityContext: {}/a \          runAsNonRoot: true\n          privileged: false' | kubectl apply -f -
 echo "Created new nginx-imperative deployment with 2 replicas and compliance settings"
 # Verify deployment status
 echo "Checking deployment status..."
-kubectl wait --for=condition=available --timeout=300s deployment/nginx-imperative || { echo "Wait failed, but deployment may still be usable for testing."; }
-echo "Deployment nginx-imperative is ready with 2 replicas (or partially ready)"
+kubectl wait --for=condition=available --timeout=300s deployment/nginx-imperative || { echo "Wait failed: $?"; exit 1; }
+echo "Deployment nginx-imperative is ready with 2 replicas"
