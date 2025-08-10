@@ -17,7 +17,9 @@ fi
 # Create deployment with compliance settings
 echo "Attempting to create deployment..."
 kubectl create deployment nginx-imperative --image=nginx:1.25-alpine --replicas=2 --dry-run=client -o yaml > temp.yaml
-# Modify YAML in temp file
+# Modify YAML in temp file with proper nesting
+sed -i '/template:/a \
+      spec:' temp.yaml
 sed -i '/spec:/a \
       securityContext:\n\
         runAsNonRoot: true\n\
@@ -26,7 +28,7 @@ sed -i 's/resources: {}/resources:\n          limits:\n            cpu: "200m"\n
 # Debug: Display modified YAML
 cat temp.yaml
 # Apply the modified YAML
-kubectl apply -f temp.yaml || { echo "Deployment apply failed, but continuing for testing."; }
+kubectl apply -f temp.yaml || { echo "Deployment apply failed, but continuing for testing. Check temp.yaml for issues."; }
 echo "Created new nginx-imperative deployment with 2 replicas and compliance settings"
 # Verify deployment status
 echo "Checking deployment status..."
