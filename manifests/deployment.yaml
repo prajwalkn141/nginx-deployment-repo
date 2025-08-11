@@ -1,20 +1,43 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: nginx
-  namespace: default  
+  name: nginx  # Updated to match Argo CD app name for clarity
+  namespace: default
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: nginx
+      app: nginx  # Consistent with template and Argo CD app name
   template:
     metadata:
       labels:
-        app: nginx
+        app: nginx  # Consistent with selector
     spec:
       containers:
       - name: nginx
         image: nginx:latest
         ports:
         - containerPort: 80
+          name: http  # Named port for probe mapping
+        resources:
+          limits:
+            cpu: "300m"  # Increased to avoid resource constraints
+            memory: "512Mi"  # Increased for stability
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+        securityContext:
+          runAsNonRoot: true  # Ensures non-root execution
+          privileged: false  # Prevents privilege escalation
+        livenessProbe:  # Detects and restarts unhealthy pods
+          httpGet:
+            path: /
+            port: http
+          initialDelaySeconds: 60  # Increased to allow Nginx startup
+          periodSeconds: 15
+        readinessProbe:  # Ensures pods are ready
+          httpGet:
+            path: /
+            port: http
+          initialDelaySeconds: 20  # Increased for stability
+          periodSeconds: 15
