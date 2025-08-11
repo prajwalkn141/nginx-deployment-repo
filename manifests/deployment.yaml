@@ -4,7 +4,7 @@ metadata:
   name: nginx  # Updated to match Argo CD app name for clarity
   namespace: default
 spec:
-  replicas: 2
+  replicas: 3
   selector:
     matchLabels:
       app: nginx  # Consistent with template and Argo CD app name
